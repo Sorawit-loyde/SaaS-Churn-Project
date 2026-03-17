@@ -1,19 +1,12 @@
+import os
+import pandas as pd
+import matplotlib.pyplot as plt
+import seaborn as sns
 from sklearn.model_selection import train_test_split
 from sklearn.ensemble import RandomForestClassifier
-from sklearn.metrics import classification_report, accuracy_score
+from sklearn.metrics import classification_report, accuracy_score, confusion_matrix
 
-# Import your custom modules
-from data_loader import load_master_data
-from preprocessing import check_null_churn_data, preprocess_features
-
-def main():
-    print("Loading data...")
-    df = load_master_data()
-    
-    print("Preprocessing data...")
-    df = check_null_churn_data(df)
-    df = preprocess_features(df)
-    
+def train_and_evaluate(df):
     # Define Features (X) and Target (y)
     X = df.drop(columns=['churn_flag'])
     y = df['churn_flag']
@@ -35,5 +28,34 @@ def main():
     print(f"Accuracy: {accuracy_score(y_test, predictions):.4f}")
     print("\nClassification Report:\n", classification_report(y_test, predictions))
 
-if __name__ == "__main__":
-    main()
+    # --- Feature Importance ---
+    print("\nGenerating Feature Importance Chart...")
+    feature_importances = pd.Series(model.feature_importances_, index=X.columns).sort_values(ascending=False)
+    
+    plt.figure(figsize=(10, 6))
+    sns.barplot(x=feature_importances.values, y=feature_importances.index, color='skyblue')
+    plt.title('Feature Importance for SaaS Churn')
+    plt.xlabel('Importance Score')
+    plt.ylabel('Features')
+    plt.tight_layout()
+    os.makedirs('reports', exist_ok=True)
+    plt.savefig('reports/feature_importance.png')
+    print("Saved Feature Importance chart to reports/feature_importance.png")
+    plt.close()
+    
+    # --- Confusion Matrix ---
+    print("\nGenerating Confusion Matrix...")
+    cm = confusion_matrix(y_test, predictions)
+    plt.figure(figsize=(8, 6))
+    sns.heatmap(cm, annot=True, fmt='d', cmap='Blues', 
+                xticklabels=['Not Churned', 'Churned'], 
+                yticklabels=['Not Churned', 'Churned'])
+    plt.title('Confusion Matrix')
+    plt.xlabel('Predicted Label')
+    plt.ylabel('Actual Label')
+    plt.tight_layout()
+    plt.savefig('reports/confusion_matrix.png')
+    print("Saved Confusion Matrix to reports/confusion_matrix.png")
+    plt.close()
+    
+    return model, predictions, y_test
