@@ -58,4 +58,7 @@ def train_and_evaluate(df):
     print("Saved Confusion Matrix to reports/confusion_matrix.png")
     plt.close()
     
-    return model, predictions, y_test
+    # Generate probabilities for the full dataset (for the dashboard)
+    full_probabilities = model.predict_proba(X)[:, 1]
+    
+    return model, predictions, y_test, full_probabilities
