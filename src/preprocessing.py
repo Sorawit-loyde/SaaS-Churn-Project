@@ -1,23 +1,37 @@
 import pandas as pd
 from sklearn.preprocessing import LabelEncoder
 
-def clean_churn_data(df):
+def check_null_churn_data(df):
     """
-    Cleans the dataframe and prepares it for the model.
+    check the dataframe for null values.
     """
-    # 1. Fill missing values (Example: fill tenure with 0)
-    df['tenure'] = df['tenure'].fillna(0)
+    if df.isnull().values.any():
+        print("Missing values detected:\n", df.isnull().sum())
+        return df
+    else:
+        print("No missing values detected.")
+        return df    
+def preprocess_features(df):
+    """
+    Encode categorical features and prepare for machine learning.
+    """
+    # 1. Drop identifier column
+    df = df.drop(columns=['account_id'])
     
-    # 2. Encode categorical columns (e.g., Churn: 'Yes' -> 1, 'No' -> 0)
+    # 2. Encode categorical text features
     le = LabelEncoder()
-    if 'Churn' in df.columns:
-        df['Churn'] = le.fit_transform(df['Churn'])
-        
+    categorical_cols = ['industry', 'country', 'plan_tier']
+    for col in categorical_cols:
+         df[col] = le.fit_transform(df[col])
+         
+    # 3. Convert booleans to 1/0
+    df['is_trial'] = df['is_trial'].astype(int)
+    df['churn_flag'] = df['churn_flag'].astype(int)
+    
     return df
-
 if __name__ == "__main__":
-    # Test your function locally
-    # df = pd.read_csv('data/processed/master_customer_data.csv')
-    # clean_df = clean_churn_data(df)
-    # print(clean_df.head())
+    df = pd.read_csv('data/processed/master_customer_data.csv')
+    check_null_churn_data(df)
+    df = preprocess_features(df)
+    print(df.head())
     print("Preprocessing module ready.")

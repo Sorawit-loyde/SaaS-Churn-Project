@@ -14,3 +14,4 @@ if __name__ == "__main__":
     # This block only runs if you execute this file directly for testing
     data = load_master_data()
     print(f"Successfully loaded {len(data)} rows.")
+    print(data.head())
